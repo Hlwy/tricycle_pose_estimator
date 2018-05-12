@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<robot name="TS0" xmlns:xacro="http://ros.org/wiki/xacro">
+
+     <!-- ====================================================
+                           Base Includes
+     ========================================================= -->
+     <xacro:include filename="$(find tricycle_description)/config/tricycle_config.urdf.xacro"/>
+     <xacro:include filename="$(find tricycle_description)/urdf/links.urdf.xacro"/>
+	<xacro:include filename="$(find terrasentia_sensors)/urdf/all_sensors.urdf.xacro" />
+
+     <!-- ====================================================
+                           Components
+     ========================================================= -->
+
+	<!-- base_link -->
+	<link name="${PARENT}"/>
+
+	<!-- Chassis -->
+	<xacro:tricycle_chassis name="chassis" parent="${PARENT}" xyz="0.0 0 ${BACK_WHEEL_RADIUS}" rpy="0 0 0" dx="${DX}" dy="${DY}" dz="${DZ}" color="grey"/>
+
+	<!-- Wheels  -->
+	<xacro:tricycle_wheel name="right"   parent="${PARENT}"  xyz="0.0  ${BACK_WHEEL_SEPERATION/2} ${BACK_WHEEL_RADIUS}" rpy="${-M_PI/2} 0 0" radius="${BACK_WHEEL_RADIUS}" length="${WHEEL_DEPTH}" color="green"/>
+	<xacro:tricycle_wheel name="left"    parent="${PARENT}"  xyz="0.0  ${-BACK_WHEEL_SEPERATION/2} ${BACK_WHEEL_RADIUS}" rpy="${-M_PI/2} 0 0" radius="${BACK_WHEEL_RADIUS}" length="${WHEEL_DEPTH}" color="green"/>
+	<xacro:tricycle_steering name="front"  parent="${PARENT}" flip="-1" anglelimit="${M_PI/4}"  xyz="${FRONT_WHEEL_SEPERATION}  0.0   ${FRONT_WHEEL_RADIUS}" rpy="${M_PI/2} 0 0" radius="${FRONT_WHEEL_RADIUS}" length="${WHEEL_DEPTH}" color="orange"/>
+	<!-- <xacro:tricycle_wheel_actuated name="rear"  parent="${PARENT}"  xyz="0.0  0.0   ${BACK_WHEEL_RADIUS}" rpy="${-M_PI/2} 0 0" radius="${BACK_WHEEL_RADIUS}" length="${2*WHEEL_DEPTH}" color="purple"/> -->
+	<!-- ${-M_PI/2} -->
+	<!-- Motor plugin -->
+	<!-- <xacro:tricycle_drive /> -->
+
+	<!-- ====================================================
+					  Sensors
+	========================================================= -->
+	<!-- IMU -->
+     <xacro:sensor_imu_terra name="imu" parent="${PARENT}" color="red"
+                    update_rate="50.0"
+                    noise="0.005"
+                    yaw_offset="0.0"
+                    yaw_drift="0.02"
+                    yaw_noise="0.01"
+                    rate_offset="0.0 0.0 0.0"
+                    rate_drift="0.002 0.002 0.002"
+                    rate_noise="0.001 0.001 0.001"
+                    accel_offset="0.0 0.0 0.0"
+                    accel_drift="0.005 0.005 0.005"
+                    accel_noise="0.005 0.005 0.005">
+          <origin xyz="0 0 ${BACK_WHEEL_RADIUS}" rpy="0 0 0"/>
+     </xacro:sensor_imu_terra>
+
+	<gazebo>
+		<!-- <plugin name="tricycle_drive_controller" filename="libgazebo_ros_tricycle_drive.so"> -->
+		<plugin name="tricycle_drive_controller" filename="libTricycleDriveModPlugin.so">
+			<rosDebugLevel>Debug</rosDebugLevel>
+			<robotNamespace></robotNamespace>
+			<publishWheelTF>false</publishWheelTF>
+			<publishWheelJointState>true</publishWheelJointState>
+			<alwaysOn>true</alwaysOn>
+			<steeringJoint>front_steering_joint</steeringJoint>
+			<actuatedWheelJoint>front_wheel_joint</actuatedWheelJoint>
+			<encoderWheelLeftJoint>left_wheel_joint</encoderWheelLeftJoint>
+			<encoderWheelRightJoint>right_wheel_joint</encoderWheelRightJoint>
+			<actuatedWheelDiameter>${FRONT_WHEEL_RADIUS}</actuatedWheelDiameter>
+			<encoderWheelDiameter>${BACK_WHEEL_RADIUS}</encoderWheelDiameter>
+			<encoderWheelSeparation>${BACK_WHEEL_SEPERATION}</encoderWheelSeparation>
+			<commandTopic>cmd_vel</commandTopic>
+			<odometryTopic>odom</odometryTopic>
+			<odometryFrame>odom</odometryFrame>
+			<odometrySource>encoder</odometrySource>
+			<robotBaseFrame>base_link</robotBaseFrame>
+			<updateRate>10.0</updateRate>
+			<wheelAcceleration>5.0</wheelAcceleration>
+			<wheelDeceleration>5.0</wheelDeceleration>
+			<wheelSpeedTolerance>0.05</wheelSpeedTolerance>
+			<wheelTorque>20</wheelTorque>
+			<steeringSpeed>10.0</steeringSpeed>
+			<steeringAngleTolerance>0.02</steeringAngleTolerance>
+		</plugin>
+	</gazebo>
+
+	<!-- <xacro:ts0_chassis name="base_link" stl="${chassis_stl}" size="${CHASSIS_SIZE}" z_offset="${CHASSIS_OFFSET}" color="grey"/>
+
+	<xacro:wheel prefix="front" suffix="left" stl="${wheel_stl}" color="grey"
+		radius="${WHEEL_RADIUS}" depth="${WHEEL_DEPTH}" reflect="-1" friction="${FL_WHEEL_FRICTION}" scale="0.0254">
+		<origin xyz="0 ${WHEEL_DEPTH} 0" rpy="0 0 -3.154" />
+	</xacro:wheel>
+
+	<xacro:wheel prefix="rear" suffix="right" stl="${wheel_stl}" color="grey"
+		radius="${WHEEL_RADIUS}" depth="${WHEEL_DEPTH}" reflect="1" friction="${RR_WHEEL_FRICTION}" scale="0.0254">
+		<origin xyz="0 -${WHEEL_DEPTH} 0" rpy="0 0 0" />
+	</xacro:wheel>
+
+	<xacro:wheel prefix="rear" suffix="left" stl="${wheel_stl}" color="grey"
+		radius="${WHEEL_RADIUS}" depth="${WHEEL_DEPTH}" reflect="-1" friction="${RL_WHEEL_FRICTION}" scale="0.0254">
+		<origin xyz="0 ${WHEEL_DEPTH} 0" rpy="0 0 -3.154" />
+	</xacro:wheel> -->
+
+
+</robot>

@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<launch>
+
+     <!-- Robot pose-->
+     <arg name="x" default="0"/>
+     <arg name="y" default="-1"/>
+     <arg name="z" default="0.5"/>
+     <arg name="roll" default="0"/>
+     <arg name="pitch" default="0"/>
+     <arg name="yaw" default="1.5708"/>
+     <arg name="name" default="Brain_Tricycle"/>
+
+     <!-- Launch configuration settings -->
+     <arg name="use_joy" default="true"/>
+     <arg name="use_xbox_joy" default="true"/>
+     <arg name="dev_joy" default="/dev/input/js0"/>
+     <arg name="bot_model" default="brain_tryke.urdf.xacro" />
+     <param name="robot_description" command="$(find xacro)/xacro $(find tricycle_description)/robots/$(arg bot_model)" />
+
+
+     <node pkg="robot_state_publisher" type="state_publisher" name="robot_state_publisher">
+          <param name="publish_frequency" type="double" value="200.0"/>
+	 	<param name="tf_prefix" value="$(arg name)"/>
+     </node>
+     <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+		<param name="use_gui" value="false"/>
+	</node> -->
+
+     <node name="spawn_terrasentia" pkg="gazebo_ros" type="spawn_model"
+          args="-x $(arg x) -y $(arg y) -z $(arg z) -R $(arg roll)
+         -P $(arg pitch) -Y $(arg yaw) -urdf -param robot_description -model $(arg name)"
+          output="screen"
+     />
+	<group if="$(arg use_joy)">
+	     <!-- Load joystick nodes for manual control -->
+	     <node pkg="joy" type="joy_node" name="joy_node">
+	          <param name="dev" value="$(arg dev_joy)"/>
+	     </node>
+
+		<!-- Xbox -->
+		<group if="$(arg use_xbox_joy)">
+	          <node pkg="teleop_twist_joy" type="teleop_node" name="joy_controller_node">
+				<remap from="cmd_vel" to="$(arg name)/cmd_vel"/>
+				<param name="enable_button" value="7"/>
+	               <param name="axis_angular" value="2"/>
+	               <param name="scale_linear" value="1"/>
+	               <param name="scale_angular" value="1.5"/>
+	          </node>
+	     </group>
+		<!-- PS3 -->
+	     <group unless="$(arg use_xbox_joy)">
+			<node pkg="teleop_twist_joy" type="teleop_node" name="joy_controller_node">
+				<param name="enable_button" value="5"/>
+				<param name="axis_angular" value="2"/>
+				<param name="scale_linear" value="1"/>
+				<param name="scale_angular" value="1.5"/>
+			</node>
+	     </group>
+	</group>
+</launch>

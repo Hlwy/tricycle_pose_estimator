@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+     <!-- ====================================================
+                           Define Variables
+     ========================================================= -->
+     <xacro:property name="FRONT_WHEEL_RADIUS" value="0.2"/>
+     <xacro:property name="BACK_WHEEL_RADIUS" value="0.2"/>
+	<xacro:property name="FRONT_WHEEL_SEPERATION" value="1.0"/>
+     <xacro:property name="BACK_WHEEL_SEPERATION" value="0.75"/>
+     <xacro:property name="DX" value="0.5"/>
+     <xacro:property name="DY" value="0.5"/>
+     <xacro:property name="DZ" value="0.1"/>
+	<xacro:property name="WHEEL_DEPTH" value="0.03838"/>
+	<!-- <xacro:property name="CHASSIS_SIZE" value="0.35322 0.508 0.13136"/> -->
+
+     <!-- ====================================================
+                         Wheel Properties
+     ========================================================= -->
+     <xacro:property name="FRONT_WHEEL_FRICTION" value="0.75"/>
+     <xacro:property name="RR_WHEEL_FRICTION" value="0.75"/>
+     <xacro:property name="RL_WHEEL_FRICTION" value="0.75"/>
+
+     <!-- ====================================================
+                           Constants
+     ========================================================= -->
+     <xacro:property name="M_PI" value="3.1415926535897931" />
+
+	<!-- ====================================================
+					  Link Names
+	========================================================= -->
+	<xacro:property name="PARENT" value="base_link" />
+</robot>

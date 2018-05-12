@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<package>
+     <name>tricycle_description</name>
+     <version>1.0.0</version>
+     <description>This package handles all of the configuration for assembling a tricycle model in Gazebo for collecting data to be used for pose estimator verification.</description>
+
+     <author>Hunter Young</author>
+     <maintainer email="hunter.lw.young@gmail.com" />
+     <license>BSD</license>
+
+     <!-- Use buildtool_depend for build tool packages: -->
+     <buildtool_depend>catkin</buildtool_depend>
+
+     <!-- Use build_depend for packages you need at compile time: -->
+     <build_depend>roslaunch</build_depend>
+     <build_depend>roscpp</build_depend>
+     <build_depend>rospy</build_depend>
+     <build_depend>sensor_msgs</build_depend>
+     <build_depend>geometry_msgs</build_depend>
+     <build_depend>std_msgs</build_depend>
+     <build_depend>nav_msgs</build_depend>
+     <build_depend>gazebo_msgs</build_depend>
+     <build_depend>tf</build_depend>
+     <build_depend>message_generation</build_depend>
+     <build_depend>genmsg</build_depend>
+     <build_depend>dynamic_reconfigure</build_depend>
+     <build_depend>libgazebo7-dev</build_depend>
+     <build_depend>gazebo_ros</build_depend>
+     <build_depend>urdf</build_depend>
+
+     <!-- Use run_depend for packages you need at runtime: -->
+     <run_depend>roscpp</run_depend>
+     <run_depend>rospy</run_depend>
+     <run_depend>sensor_msgs</run_depend>
+     <run_depend>geometry_msgs</run_depend>
+     <run_depend>std_msgs</run_depend>
+     <run_depend>nav_msgs</run_depend>
+     <run_depend>gazebo_msgs</run_depend>
+     <run_depend>tf</run_depend>
+     <run_depend>message_runtime</run_depend>
+     <run_depend>message_generation</run_depend>
+     <run_depend>genmsg</run_depend>
+     <run_depend>dynamic_reconfigure</run_depend>
+     <run_depend>gazebo7</run_depend>
+     <run_depend>gazebo_ros</run_depend>
+     <run_depend>robot_state_publisher</run_depend>
+     <run_depend>rviz</run_depend>
+     <run_depend>joint_state_publisher</run_depend>
+
+     <!-- The export tag contains other, unspecified, tags -->
+     <export>
+          <!-- <gazebo_ros plugin_path="${prefix}/lib" gazebo_media_path="${prefix}" /> -->
+     </export>
+</package>
