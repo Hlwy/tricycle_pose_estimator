@@ -22,10 +22,6 @@
 	<xacro:tricycle_wheel name="right"   parent="${PARENT}"  xyz="0.0  ${BACK_WHEEL_SEPERATION/2} ${BACK_WHEEL_RADIUS}" rpy="${-M_PI/2} 0 0" radius="${BACK_WHEEL_RADIUS}" length="${WHEEL_DEPTH}" color="green"/>
 	<xacro:tricycle_wheel name="left"    parent="${PARENT}"  xyz="0.0  ${-BACK_WHEEL_SEPERATION/2} ${BACK_WHEEL_RADIUS}" rpy="${-M_PI/2} 0 0" radius="${BACK_WHEEL_RADIUS}" length="${WHEEL_DEPTH}" color="green"/>
 	<xacro:tricycle_steering name="front"  parent="${PARENT}" flip="-1" anglelimit="${M_PI/4}"  xyz="${FRONT_WHEEL_SEPERATION}  0.0   ${FRONT_WHEEL_RADIUS}" rpy="${M_PI/2} 0 0" radius="${FRONT_WHEEL_RADIUS}" length="${WHEEL_DEPTH}" color="orange"/>
-	<!-- <xacro:tricycle_wheel_actuated name="rear"  parent="${PARENT}"  xyz="0.0  0.0   ${BACK_WHEEL_RADIUS}" rpy="${-M_PI/2} 0 0" radius="${BACK_WHEEL_RADIUS}" length="${2*WHEEL_DEPTH}" color="purple"/> -->
-	<!-- ${-M_PI/2} -->
-	<!-- Motor plugin -->
-	<!-- <xacro:tricycle_drive /> -->
 
 	<!-- ====================================================
 					  Sensors
@@ -67,31 +63,15 @@
 			<odometrySource>encoder</odometrySource>
 			<robotBaseFrame>base_link</robotBaseFrame>
 			<updateRate>10.0</updateRate>
-			<wheelAcceleration>5.0</wheelAcceleration>
-			<wheelDeceleration>5.0</wheelDeceleration>
+			<wheelAcceleration>2.5</wheelAcceleration>
+			<wheelDeceleration>10.0</wheelDeceleration>
 			<wheelSpeedTolerance>0.05</wheelSpeedTolerance>
-			<wheelTorque>20</wheelTorque>
-			<steeringSpeed>10.0</steeringSpeed>
-			<steeringAngleTolerance>0.02</steeringAngleTolerance>
+			<wheelTorque>5</wheelTorque>
+			<steeringSpeed>1.5</steeringSpeed>
+			<!-- <steeringSpeed>0</steeringSpeed> -->
+			<steeringAngleTolerance>0.01</steeringAngleTolerance>
+			<steeringAngleLimit>1.5708</steeringAngleLimit>
 		</plugin>
 	</gazebo>
-
-	<!-- <xacro:ts0_chassis name="base_link" stl="${chassis_stl}" size="${CHASSIS_SIZE}" z_offset="${CHASSIS_OFFSET}" color="grey"/>
-
-	<xacro:wheel prefix="front" suffix="left" stl="${wheel_stl}" color="grey"
-		radius="${WHEEL_RADIUS}" depth="${WHEEL_DEPTH}" reflect="-1" friction="${FL_WHEEL_FRICTION}" scale="0.0254">
-		<origin xyz="0 ${WHEEL_DEPTH} 0" rpy="0 0 -3.154" />
-	</xacro:wheel>
-
-	<xacro:wheel prefix="rear" suffix="right" stl="${wheel_stl}" color="grey"
-		radius="${WHEEL_RADIUS}" depth="${WHEEL_DEPTH}" reflect="1" friction="${RR_WHEEL_FRICTION}" scale="0.0254">
-		<origin xyz="0 -${WHEEL_DEPTH} 0" rpy="0 0 0" />
-	</xacro:wheel>
-
-	<xacro:wheel prefix="rear" suffix="left" stl="${wheel_stl}" color="grey"
-		radius="${WHEEL_RADIUS}" depth="${WHEEL_DEPTH}" reflect="-1" friction="${RL_WHEEL_FRICTION}" scale="0.0254">
-		<origin xyz="0 ${WHEEL_DEPTH} 0" rpy="0 0 -3.154" />
-	</xacro:wheel> -->
-
 
 </robot>

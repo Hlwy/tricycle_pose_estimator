@@ -38,8 +38,8 @@
  * \date 22th of June 2014
  */
 
-#ifndef TRICYCLE_DRIVE_PLUGIN_HH
-#define TRICYCLE_DRIVE_PLUGIN_HH
+#ifndef TRICYCLE_MOD_DRIVE_PLUGIN_HH
+#define TRICYCLE_MOD_DRIVE_PLUGIN_HH
 
 #include <map>
 
@@ -70,7 +70,7 @@ class Joint;
 class Entity;
 
 
-class GazeboRosTricycleDrive : public ModelPlugin {
+class GazeboRosTricycleModDrive : public ModelPlugin {
 
     class TricycleDriveCmd {
     public:
@@ -85,8 +85,8 @@ class GazeboRosTricycleDrive : public ModelPlugin {
         WORLD = 1,
     };
 public:
-    GazeboRosTricycleDrive();
-    ~GazeboRosTricycleDrive();
+    GazeboRosTricycleModDrive();
+    ~GazeboRosTricycleModDrive();
     void Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf);
 
 protected:
@@ -116,6 +116,7 @@ private:
     double steering_angle_tolerance_;
     double steering_speed_;
     double separation_encoder_wheel_;
+    double steering_angle_limit_;
 
     OdomSource odom_source_;
     double wheel_torque_;

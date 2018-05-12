@@ -5,6 +5,10 @@ project(tricycle_description)
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
 	std_msgs
+	gazebo_plugins
+	gazebo_ros
+	urdf
+     xacro
 )
 find_package(gazebo REQUIRED)
 find_package(roslaunch)
@@ -14,6 +18,8 @@ list(APPEND CMAKE_CXX_FLAGS "${GAZEBO_CXX_FLAGS}")
 
 catkin_package(
 	CATKIN_DEPENDS roscpp std_msgs
+	LIBRARIES
+	TricycleDriveModPlugin
 )
 
 include_directories(
@@ -27,4 +33,4 @@ foreach(dir config launch meshes urdf)
 endforeach(dir)
 
 add_library(TricycleDriveModPlugin SHARED plugins/TricycleDriveModPlugin.cpp)
-target_link_libraries(TricycleDriveModPlugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
+target_link_libraries(TricycleDriveModPlugin ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})

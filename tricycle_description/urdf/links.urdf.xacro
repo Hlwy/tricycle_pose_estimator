@@ -82,7 +82,7 @@
 			<origin xyz="${xyz}" rpy="${rpy}"/>
 			<parent link="${parent}"/>
 			<child link="${name}_wheel"/>
-			<axis xyz="0 0 ${1*flip}"/>
+			<axis xyz="0 0 1"/>
 			<anchor xyz="0 0 0"/>
 			<limit effort="100" velocity="100" k_velocity="0"/>
 			<joint_properties damping="0.0" friction="0.0"/>
@@ -116,8 +116,9 @@
 			<child link="${name}_steering"/>
 			<axis xyz="0 1 0"/>
 			<anchor xyz="0 0 0"/>
-			<limit effort="10" velocity="10" lower="${-anglelimit}" upper="${anglelimit}"/>
+			<limit effort="5" velocity="5" lower="${-anglelimit}" upper="${anglelimit}"/>
 			<dynamics damping="0.0" friction="0.0"/>
+               <safety_controller k_position="100" k_velocity="100" soft_lower_limit="${-(anglelimit-0.2)}" soft_upper_limit="${anglelimit-0.2}"/>
 		</joint>
 
 		<link name="${name}_steering">

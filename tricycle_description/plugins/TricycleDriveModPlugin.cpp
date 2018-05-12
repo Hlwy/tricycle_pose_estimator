@@ -42,7 +42,7 @@
 #include <algorithm>
 #include <assert.h>
 
-#include <gazebo_plugins/gazebo_ros_tricycle_drive.h>
+// #include <gazebo_plugins/gazebo_ros_tricycle_drive.h>
 
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/Vector3.hh>
@@ -56,6 +56,10 @@
 #include <nav_msgs/Odometry.h>
 #include <boost/bind.hpp>
 #include <boost/thread/mutex.hpp>
+#include <math.h>
+
+#include "TricycleDriveModPlugin.h"
+#define _USE_MATH_DEFINES
 
 namespace gazebo
 {
@@ -65,13 +69,13 @@ enum {
     LEFT,
 };
 
-GazeboRosTricycleDrive::GazeboRosTricycleDrive() {}
+GazeboRosTricycleModDrive::GazeboRosTricycleModDrive() {}
 
 // Destructor
-GazeboRosTricycleDrive::~GazeboRosTricycleDrive() {}
+GazeboRosTricycleModDrive::~GazeboRosTricycleModDrive() {}
 
 // Load the controller
-void GazeboRosTricycleDrive::Load ( physics::ModelPtr _parent, sdf::ElementPtr _sdf )
+void GazeboRosTricycleModDrive::Load ( physics::ModelPtr _parent, sdf::ElementPtr _sdf )
 {
     parent = _parent;
     gazebo_ros_ = GazeboRosPtr ( new GazeboRos ( _parent, _sdf, "TricycleDrive" ) );
@@ -93,6 +97,7 @@ void GazeboRosTricycleDrive::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     gazebo_ros_->getParameter<double> ( steering_speed_, "steeringSpeed", 0 );
     gazebo_ros_->getParameter<double> ( steering_angle_tolerance_, "steeringAngleTolerance", 0.01 );
     gazebo_ros_->getParameter<double> ( separation_encoder_wheel_, "encoderWheelSeparation", 0.5 );
+    gazebo_ros_->getParameter<double> ( steering_angle_limit_, "steeringAngleLimit", 1.5708 );
 
     gazebo_ros_->getParameterBoolean ( publishWheelTF_, "publishWheelTF", false );
     gazebo_ros_->getParameterBoolean ( publishWheelJointState_, "publishWheelJointState", false );
@@ -137,7 +142,7 @@ void GazeboRosTricycleDrive::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
 
     ros::SubscribeOptions so =
         ros::SubscribeOptions::create<geometry_msgs::Twist> ( command_topic_, 1,
-                boost::bind ( &GazeboRosTricycleDrive::cmdVelCallback, this, _1 ),
+                boost::bind ( &GazeboRosTricycleModDrive::cmdVelCallback, this, _1 ),
                 ros::VoidPtr(), &queue_ );
 
     cmd_vel_subscriber_ = gazebo_ros_->node()->subscribe ( so );
@@ -147,14 +152,14 @@ void GazeboRosTricycleDrive::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     ROS_INFO_NAMED("tricycle_drive", "%s: Advertise odom on %s ", gazebo_ros_->info(), odometry_topic_.c_str() );
 
     // start custom queue for diff drive
-    this->callback_queue_thread_ = boost::thread ( boost::bind ( &GazeboRosTricycleDrive::QueueThread, this ) );
+    this->callback_queue_thread_ = boost::thread ( boost::bind ( &GazeboRosTricycleModDrive::QueueThread, this ) );
 
     // listen to the update event (broadcast every simulation iteration)
-    this->update_connection_ = event::Events::ConnectWorldUpdateBegin ( boost::bind ( &GazeboRosTricycleDrive::UpdateChild, this ) );
+    this->update_connection_ = event::Events::ConnectWorldUpdateBegin ( boost::bind ( &GazeboRosTricycleModDrive::UpdateChild, this ) );
 
 }
 
-void GazeboRosTricycleDrive::publishWheelJointState()
+void GazeboRosTricycleModDrive::publishWheelJointState()
 {
     std::vector<physics::JointPtr> joints;
     joints.push_back ( joint_steering_ );
@@ -181,7 +186,7 @@ void GazeboRosTricycleDrive::publishWheelJointState()
     joint_state_publisher_.publish ( joint_state_ );
 }
 
-void GazeboRosTricycleDrive::publishWheelTF()
+void GazeboRosTricycleModDrive::publishWheelTF()
 {
     ros::Time current_time = ros::Time::now();
     std::vector<physics::JointPtr> joints;
@@ -208,7 +213,7 @@ void GazeboRosTricycleDrive::publishWheelTF()
 
 }
 // Update the controller
-void GazeboRosTricycleDrive::UpdateChild()
+void GazeboRosTricycleModDrive::UpdateChild()
 {
     if ( odom_source_ == ENCODER ) UpdateOdometryEncoder();
 #if GAZEBO_MAJOR_VERSION >= 8
@@ -235,10 +240,11 @@ void GazeboRosTricycleDrive::UpdateChild()
 }
 
 
-void GazeboRosTricycleDrive::motorController ( double target_speed, double target_angle, double dt )
+void GazeboRosTricycleModDrive::motorController ( double target_speed, double target_angle, double dt )
 {
     double applied_speed = target_speed;
     double applied_angle = target_angle;
+    double applied_steering_speed = 0;
 
     double current_speed = joint_wheel_actuated_->GetVelocity ( 0 );
     if (wheel_acceleration_ > 0)
@@ -268,14 +274,18 @@ void GazeboRosTricycleDrive::motorController ( double target_speed, double targe
     double current_angle = joint_steering_->GetAngle ( 0 ).Radian();
 #endif
 
+     // current_angle = fmod(current_angle, 2 * M_PI);
+     // current_angle = fmod(current_angle, 2 * M_PI) - M_PI;
+     // current_angle = fmod(current_angle + M_PI, 2 * M_PI) - M_PI;
+
     // truncate target angle
-    if (target_angle > +M_PI / 2.0)
+    if (target_angle > steering_angle_limit_)
     {
-      target_angle =  +M_PI / 2.0;
+      target_angle =  steering_angle_limit_;
     }
-    else if (target_angle < -M_PI / 2.0)
+    else if (target_angle < -steering_angle_limit_)
     {
-      target_angle =  -M_PI / 2.0;
+      target_angle =  -steering_angle_limit_;
     }
 
     // if steering_speed_ is > 0, use speed control, otherwise use position control
@@ -283,17 +293,21 @@ void GazeboRosTricycleDrive::motorController ( double target_speed, double targe
     double diff_angle = current_angle - target_angle;
     if ( steering_speed_ > 0 ) {
       // this means we will steer using steering speed
-      double applied_steering_speed = 0;
+      applied_steering_speed = 0;
       if (fabs(diff_angle) < steering_angle_tolerance_ ) {
         // we're withing angle tolerance
         applied_steering_speed = 0;
-      } else if ( diff_angle < target_speed ) {
+      // } else if ( diff_angle < target_speed ) { // original
+      } else if ( diff_angle < 0 ) {
         // steer toward target angle
         applied_steering_speed = steering_speed_;
-      } else {
+   } else if (diff_angle > 0 ) {
         // steer toward target angle
         applied_steering_speed = -steering_speed_;
-      }
+   // } else if (fabs(diff_angle) == 0 ) {
+   } else{
+        applied_steering_speed = 0;
+   }
 
       // use speed control, not recommended, for better dynamics use force control
       joint_steering_->SetParam ( "vel", 0, applied_steering_speed );
@@ -327,12 +341,12 @@ void GazeboRosTricycleDrive::motorController ( double target_speed, double targe
       joint_steering_->SetPosition(0, applied_angle);
 #endif
     }
-    //ROS_INFO_NAMED("tricycle_drive", "target: [%3.2f, %3.2f], current: [%3.2f, %3.2f], applied: [%3.2f, %3.2f/%3.2f] ",
-    //            target_speed, target_angle, current_speed, current_angle, applied_speed, applied_angle, applied_steering_speed );
+    ROS_INFO_NAMED("tricycle_drive", "target: [%3.2f, %3.2f], current: [%3.2f, %3.2f], applied: [%3.2f, %3.2f/%3.2f] ",
+               target_speed, target_angle, current_speed, current_angle, applied_speed, applied_angle, applied_steering_speed );
 }
 
 // Finalize the controller
-void GazeboRosTricycleDrive::FiniChild()
+void GazeboRosTricycleModDrive::FiniChild()
 {
     alive_ = false;
     queue_.clear();
@@ -341,14 +355,14 @@ void GazeboRosTricycleDrive::FiniChild()
     callback_queue_thread_.join();
 }
 
-void GazeboRosTricycleDrive::cmdVelCallback ( const geometry_msgs::Twist::ConstPtr& cmd_msg )
+void GazeboRosTricycleModDrive::cmdVelCallback ( const geometry_msgs::Twist::ConstPtr& cmd_msg )
 {
     boost::mutex::scoped_lock scoped_lock ( lock );
     cmd_.speed = cmd_msg->linear.x;
     cmd_.angle = cmd_msg->angular.z;
 }
 
-void GazeboRosTricycleDrive::QueueThread()
+void GazeboRosTricycleModDrive::QueueThread()
 {
     static const double timeout = 0.01;
 
@@ -357,7 +371,7 @@ void GazeboRosTricycleDrive::QueueThread()
     }
 }
 
-void GazeboRosTricycleDrive::UpdateOdometryEncoder()
+void GazeboRosTricycleModDrive::UpdateOdometryEncoder()
 {
     double vl = joint_wheel_encoder_left_->GetVelocity ( 0 );
     double vr = joint_wheel_encoder_right_->GetVelocity ( 0 );
@@ -407,7 +421,7 @@ void GazeboRosTricycleDrive::UpdateOdometryEncoder()
     odom_.twist.twist.linear.y = dy/seconds_since_last_update;
 }
 
-void GazeboRosTricycleDrive::publishOdometry ( double step_time )
+void GazeboRosTricycleModDrive::publishOdometry ( double step_time )
 {
 
     ros::Time current_time = ros::Time::now();
@@ -481,5 +495,5 @@ void GazeboRosTricycleDrive::publishOdometry ( double step_time )
     odometry_publisher_.publish ( odom_ );
 }
 
-GZ_REGISTER_MODEL_PLUGIN ( GazeboRosTricycleDrive )
+GZ_REGISTER_MODEL_PLUGIN ( GazeboRosTricycleModDrive )
 }
