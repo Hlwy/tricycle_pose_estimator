@@ -15,23 +15,9 @@
      <arg name="use_xbox_joy" default="false"/>
      <arg name="dev_joy" default="/dev/input/js4"/>
      <arg name="bot_model" default="brain_tryke.urdf.xacro" />
-     <param name="robot_description" command="$(find xacro)/xacro $(find tricycle_description)/robots/$(arg bot_model)" />
 
      <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
 
-     <!-- <node pkg="robot_state_publisher" type="state_publisher" name="robot_state_publisher">
-          <param name="publish_frequency" type="double" value="200.0"/>
-	 	<param name="tf_prefix" value="$(arg name)"/>
-     </node> -->
-     <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
-		<param name="use_gui" value="true"/>
-	</node> -->
-
-     <!-- <node name="spawn_terrasentia" pkg="gazebo_ros" type="spawn_model"
-          args="-x $(arg x) -y $(arg y) -z $(arg z) -R $(arg roll)
-         -P $(arg pitch) -Y $(arg yaw) -urdf -param robot_description -model $(arg name)"
-          output="screen"
-     /> -->
 	<group if="$(arg use_joy)">
 	     <!-- Load joystick nodes for manual control -->
 	     <node pkg="joy" type="joy_node" name="joy_node">
