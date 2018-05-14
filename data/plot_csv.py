@@ -1,51 +1,51 @@
 import matplotlib.pyplot as plt
-from csv import reader
-from dateutil import parser
 from matplotlib import animation
-import math
 import numpy as np
 
-file1 = 'trike_straight'
-file2 = 'trike_circle'
+# file = '/home/hunter/theHuntingGround/src/tricycle_pose_estimator/data/processed/trike_straight_generated_outputs.csv'
+file = '/home/hunter/theHuntingGround/src/tricycle_pose_estimator/data/processed/trike_circle_generated_outputs.csv'
 
-fp1 = "processed/" + str(file1) + "_extracted_truth.csv"
-fp2 = "processed/" + str(file2) + "_extracted_truth.csv"
-
-with open(fp1, 'r') as fIn:
-    straightTruth = list(reader(fIn))
-
-stX = [i[0] for i in straightTruth[1::]]
-stY = [i[1] for i in straightTruth[1::]]
-stYaw = [i[2] for i in straightTruth[1::]]
-
-with open(fp2, 'r') as f2In:
-    circleTruth = list(reader(f2In))
-
-cX = [i[0] for i in circleTruth[1::]]
-cY = [i[1] for i in circleTruth[1::]]
-cYaw = [i[2] for i in circleTruth[1::]]
+outputs = np.genfromtxt(file, delimiter=',')
+x = outputs[1:,0]
+y = outputs[1:,1]
+yaw = outputs[1:,3]
 
 fig = plt.figure()
 line = fig.add_subplot(2,1,1)
-err = fig.add_subplot(2,1,2)
+ang = fig.add_subplot(2,1,2)
 
-line.clear()
-line.plot(stY, stX,'g')
-# line.plot(cY, cX,'g',acty,actx,'b',refy,refx,'g')
-line.set_title('Position')
-line.set_xlabel('X (m)')
-line.set_ylabel('Y (m)')
-line.axis('equal')
-line.autoscale()
+def animate(i):
+	global file
+	outputs = np.genfromtxt(file, delimiter=',')
 
-err.clear()
-err.plot(cY, cX,'g')
-err.set_title('Position')
-err.set_xlabel('X (m)')
-err.set_ylabel('Y (m)')
-err.axis('equal')
-err.autoscale()
+	x = outputs[1:,0]
+	y = outputs[1:,1]
+	yaw = outputs[1:,2]
+	refX = outputs[1:,3]
+	refY = -1 * outputs[1:,4]
+	refYaw = outputs[1:,5]
+	steps = range(yaw.shape[0])
 
+	line.clear()
+	line.plot(refY, refX,'g',y,x,'r')
+	line.set_title('EKF Position')
+	line.set_xlabel('X (m)')
+	line.set_ylabel('Y (m)')
+	line.axis('equal')
+	# line.set_ylim([-5, 5])
+	# line.set_xlim([-4, 0])
+	# line.autoscale()
 
+	ang.clear()
+	ang.plot(steps, refYaw,'g', steps, yaw,'r')
+	ang.set_title('EKF Yaw')
+	ang.set_xlabel('Steps')
+	ang.set_ylabel('Yaw (rad)')
+	ang.set_ylim([-np.pi, np.pi])
+	ang.autoscale()
+
+	return line, ang,
+
+anim = animation.FuncAnimation(fig, animate, interval=25)
 
 plt.show()
