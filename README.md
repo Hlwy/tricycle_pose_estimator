@@ -39,9 +39,7 @@ My pose-estimator makes the following assumptions on the tricycle model used:
 - Rear Wheel Radius = 0.2 [m]
 - Distance from front wheel to back axis (***r***) = 1.0 [m]
 - Distance between rear wheels (***d***) = 0.75 [m]
-
 - Front-wheel encoder resolution = 512 [ticks / revolution]
-
 - Initial Pose (***x0***) [x,y,heading] = [0, 0, 0]
 
 ## Repository Overview
@@ -68,19 +66,108 @@ This project requires **Python 2.7** and the following Python libraries installe
 
 ## Implementation
 
-**TODO** Elaborate a bit more.
-
-### Sensor-Fusion Implementation
-
-My implementation for this pose-estimator utilizes a very simple Extended Kalman Filter (EKF), do to the non-linearities inherent in the tricycle-model kinematics.
+This section discusses the methods I utilized in order to estimate the 2D-pose of a tricycle-type mobile base, using the available sensor inputs.
 
 **TODO**
 
-### Data Generation
+Elaborate a bit more.
+
+#### Sensor-Fusion Implementation
+
+My implementation for this pose-estimator utilizes a very simple Extended Kalman Filter (EKF), due to the non-linearities inherent in the tricycle-model kinematics.
 
 **TODO**
 
-### Preliminary Results
+Elaborate more.
+
+## Data Generation Process
+
+The follow section describes the process used to generate the simulated data used to verify the corrected-ness of the 2D-pose estimation method developed.
+
+### Dependencies
+
+The data generation tools used to create the training data requires the **tricycle_description** folder (*contained within this repo*), and the following **additional** libraries installed:
+
+- [ROS (Kinetic-Desktop-Full)](http://wiki.ros.org/kinetic/Installation/Ubuntu)
+- [Hector Gazebo Plugins](http://wiki.ros.org/hector_gazebo_plugins)
+- [teleop_twist_joy](http://wiki.ros.org/teleop_twist_joy)** (*Optional*) **
+
+#### Building
+
+Before we can start generating custom data, we have to make sure that our ROS environment is setup properly. Assuming you have ROS properly installed, place the **tricycle_description** folder into the *src* folder contained in the catkin workspace directory of your choice, here we will be using the standard *catkin_ws*. Once moved, be sure to build your *catkin_ws*. This can be done by running the following in a terminal,
+
+	cp -r /path/to/tricycle_pose_estimator/tricycle_description /path/to/catkin_ws/src
+
+	cd /path/to/catkin_ws
+
+	catkin_make
+
+Once everything is successfully built, we need to set up are environmental variables in order to point ROS to some of the custom Gazebo plugins used to control the mobile-base. This can be done by running, in the same terminal used to start the simulator, the following,
+
+	source /path/to/catkin_ws/devel/setup.bash
+
+	export GAZEBO_MODEL_PATH=${GAZEBO_MODEL_PATH}:/path/to/catkin_ws/src/tricycle_pose_estimator/tricycle_description/models:
+
+	export GAZEBO_PLUGIN_PATH=${GAZEBO_PLUGIN_PATH}:/path/to/catkin_ws/devel/lib:
+
+or to make it easier for repeat usage, you can copy the above lines to the bottom of your ~/.bashrc file.
+
+After setting up your ROS environment, you should be able to run the following in a terminal to load up the simulated environment,
+
+	roslaunch tricycle_description launch_tricycle_sim.launch
+
+Upon success you should see the simulated environment like the one below,
+
+<p align="center">
+ <img src="./doc/images/default_gzclient_camera(1)-2018-05-14T22_44_40.114454.jpg">
+</p>
+
+#### Mobile-Base Controlling
+
+There are a variety of methods you can use in order to control the tricycle model to generate some custom data, I personally like the *teleop_twist_joy* method to use either an Xbox360, or PS3, controller to control the robot, via the */cmd_vel* topic. If you plan to use this make sure you have the appropriate system drivers installed so that your system can recognize the controllers.
+
+If you plan to use either an Xbox360, or a PS3, controller, be sure to modify the following parameters in the *launch_tricycle_sim.launch* file:
+
+- use_xbox_joy (default - false): Set this parameter depending on what controller you are using
+- dev_joy (default - /dev/input/js1): This is the device path handle associated with the controller.
+
+Additionally, depending on the controller setup, which may vary depending on drivers used, you may notice that the robot won't move when moving the joysticks. This can be one of two things:
+
+- You aren't holding down the *enable* button (**Top-right trigger** button)
+
+or
+
+- The *enable* button mapping isn't set properly.
+
+In order to check if the mapping is wrong, run the following command in a terminal and look the button mapping that responds to the pressing of the **Top-right trigger** button, and use that number to replace the value of the ** *enable_button* ** parameter associated with the <*teleop_twist_joy*> node in the *launch_tricycle_sim.launch* file.
+
+#### Recording
+
+In order to record data, run the following command in a terminal **BEFORE** you want to begin data collection,
+
+	rosbag record -a
+
+after running this command, control the robot however you like, once you are ready to stop the data record, in the same terminal from above, press **Ctrl+C** to stop the recording node. Once it shuts down, you should be able to see the name of the new .bag file by running,
+
+	ls
+
+#### ROS bag Post-Processing
+
+To make my, and potentially your, life easier I will rename that .bag file produced from the previous section to *topics.bag*, also let's move that bag to the ** *data* ** directory for safe-keeping. This can be done by running,
+
+	mv random-name-generated-by-rosbag-record.bag /path/to/tricycle_pose_estimator/data/topics.bag
+
+This bag file contains **all** the ROS topic that were available at the time of recording. Unfortunately for me, I am only interested in a few topics, in order to extract those topics of choice, and the specific data they contain, into a more programming-friendly format, you can run, in the ** *data* ** directory, the following script to generate *.csv* file for the ground truth data and a *.csv* file for the estimation inputs,
+
+	python ros_bag_utils.py
+
+Currently, the topics of interest and the names of the output data logs are hard-coded so you will have to modify that script for your own needs. Future versions will take in commandline arguments to handle easier adaptations.
+
+## Preliminary Results
+
+This following section shows some early results from the estimated 2D-poses of the tricycle model, using the Extended Kalman Filter (EKF) class.
+
+The following plots were visualized using the ** *plot_csv.py* ** script in the ** *data* ** directory.
 
 **TODO**
 
@@ -88,7 +175,7 @@ My implementation for this pose-estimator utilizes a very simple Extended Kalman
 
 ### TODOs ###
 
-- Modify ROS tricycle drive plugin to better reflect specific model assumptions
+- Fine-tune the EKF parameters to properly fuse the sensor measurements
 - Develop C++ skeleton
 
 ### Maintainer ###

@@ -97,7 +97,11 @@ if __name__ == '__main__':
 	# fileIn = "trike_straight"
 	fileIn = "trike_circle"
 	bagfile = str(fileIn) + ".bag"
+<<<<<<< HEAD
 	topics = ["/Brain_Tricycle/joint_states", "/gazebo/model_states", "/tricycle/imu"]
+=======
+	topics = ["/tricycle_base/joint_states", "/gazebo/model_states", "/tricycle/imu"]
+>>>>>>> devel/ros_repo
 	inputlog = str(fileIn) + "_extracted_inputs.csv"
 	truthlog = str(fileIn) + "_extracted_truth.csv"
 	inputs, truth = extract_bag_topics(bagfile, topics)

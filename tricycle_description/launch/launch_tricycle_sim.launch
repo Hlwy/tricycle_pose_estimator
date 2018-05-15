@@ -1,22 +1,19 @@
 <?xml version="1.0"?>
 <launch>
 
-     <!-- Robot pose-->
-     <arg name="x" default="0"/>
-     <arg name="y" default="-1"/>
-     <arg name="z" default="0.5"/>
-     <arg name="roll" default="0"/>
-     <arg name="pitch" default="0"/>
-     <arg name="yaw" default="1.5708"/>
-     <arg name="name" default="Brain_Tricycle"/>
-
      <!-- Launch configuration settings -->
+	<arg name="name" default="tricycle_base"/>
+	<arg name="world" default="basic.world"/>
+
      <arg name="use_joy" default="true"/>
      <arg name="use_xbox_joy" default="false"/>
-     <arg name="dev_joy" default="/dev/input/js4"/>
-     <arg name="bot_model" default="brain_tryke.urdf.xacro" />
+     <arg name="dev_joy" default="/dev/input/js1"/>
 
-     <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
+	<include file="$(find tricycle_description)/launch/world_template.launch">
+          <arg name="world_name" value="$(find tricycle_description)/worlds/$(arg world)"/>
+          <arg name="paused" value="false"/>
+          <arg name="gui" value="true"/>
+     </include>
 
 	<group if="$(arg use_joy)">
 	     <!-- Load joystick nodes for manual control -->
@@ -38,7 +35,7 @@
 	     <group unless="$(arg use_xbox_joy)">
 			<node pkg="teleop_twist_joy" type="teleop_node" name="joy_controller_node">
 				<remap from="cmd_vel" to="$(arg name)/cmd_vel"/>
-                    <param name="enable_button" value="11"/>
+                    <param name="enable_button" value="5"/>
 				<param name="axis_angular" value="2"/>
 				<param name="scale_linear" value="1"/>
 				<param name="scale_angular" value="3"/>

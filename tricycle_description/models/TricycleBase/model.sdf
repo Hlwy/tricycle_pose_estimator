@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.6'>
-     <model name='Brain_Tricycle'>
+     <model name='tricycle_base'>
 
           <link name='base_link'>
                <pose frame=''>0 0 0 0 -0 0</pose>
@@ -307,9 +307,9 @@
                <odometryFrame>odom</odometryFrame>
                <odometrySource>encoder</odometrySource>
                <robotBaseFrame>base_link</robotBaseFrame>
-               <updateRate>10.0</updateRate>
-               <wheelAcceleration>2.5</wheelAcceleration>
-               <wheelDeceleration>1000.0</wheelDeceleration>
+               <updateRate>50.0</updateRate>
+               <wheelAcceleration>100.0</wheelAcceleration>
+               <wheelDeceleration>100.0</wheelDeceleration>
                <wheelSpeedTolerance>0.05</wheelSpeedTolerance>
                <wheelTorque>5</wheelTorque>
                <steeringSpeed>1.5</steeringSpeed>
