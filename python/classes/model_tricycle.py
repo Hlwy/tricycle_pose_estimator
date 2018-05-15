@@ -241,11 +241,11 @@ class TricycleModel(object):
 					 |  α(t-1)	| [6]
 
 			# Time-continuous Process Model
-			f(x,t) = |   x(t-1) + v(t-1)dt*cos(θ(t-1))	|
-					 |   y(t-1) + v(t-1)dt*sin(θ(t-1))	|
-					 |   	  θ(t-1) + ω(t-1)dt			|
+			f(x,t) = |   x(t-1) + v(t-1)*dt*cos(θ(t-1))	|
+					 |   y(t-1) + v(t-1)*dt*sin(θ(t-1))	|
+		 			 | 		 θ(t-1) + ω(t-1)*dt			|
 					 |       vs(t-1)*cos(α(t-1))		|
-					 |       vs(t-1)*sin(α(t-1)) / L	|
+					 |       v(t-1)*tan(α(t-1)) / L		|
 				   	 |              vs(t-1)				|
 					 |              α(t-1)				|
 
@@ -257,9 +257,6 @@ class TricycleModel(object):
 
 		# Previous
 		x,y,theta,v,w,vs,a = self.prev_states
-		# X,Y,theta,v,w,vs,a = self.prev_states
-		# print x
-		# print str([X,Y,theta,v,w,vs,a])
 
 		# Intermediate values
 		F03 = -v*dt*np.sin(theta); 			F04 = dt*np.cos(theta)
@@ -271,12 +268,20 @@ class TricycleModel(object):
 		# Time-continuous non-linear state transition Jacobian: F(x)
 		Fx = np.array([ [1, 0, F03, F04, 0,  0,    0],
 						[0, 1, F13, F14, 0,  0,    0],
-						[0, 0,   1, F24, 0,  0,  F27],
+						[0, 0,   1,   0, 1,  0,    0],
 						[0, 0,   0,   0, 0, F36, F37],
-						[0, 0,   0,   0, 0, F46, F47],
+						[0, 0,   0, F24, 0,   0, F27],
 						[0, 0,   0,   0, 0,   1,   0],
 						[0, 0,   0,   0, 0,   0,   1]
 					])
+		# Fx = np.array([ [1, 0, F03, F04, 0,  0,    0],
+		# 				[0, 1, F13, F14, 0,  0,    0],
+		# 				[0, 0,   1, F24, 0,  0,  F27],
+		# 				[0, 0,   0,   0, 0, F36, F37],
+		# 				[0, 0,   0,   0, 0, F46, F47],
+		# 				[0, 0,   0,   0, 0,   1,   0],
+		# 				[0, 0,   0,   0, 0,   0,   1]
+		# 			])
 
 		H20 = np.cos(a); 					H21 = -vs*np.sin(a)
 		H30 = (dt*np.tan(a))/self.r_dist; 	H31 = v*dt/(np.power(np.cos(a),2)*self.r_dist)
