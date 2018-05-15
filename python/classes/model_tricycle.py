@@ -164,8 +164,10 @@ class TricycleModel(object):
 			self.prev_time = time
 			self.prev_ticks = fixed_inputs[1]
 			self.counter += 1
-			print("----	----	Skipping first data entry with Time = " + str(time))
+			dt = 0
 			return self.prev_pose
+			# print("----	----	Skipping first data entry with Time = " + str(time))
+		# else:
 
 		# Calculate time difference (sec) since last step
 		dt = time - self.prev_time
@@ -174,7 +176,14 @@ class TricycleModel(object):
 		# Calculate the linear displacement (meters) since last step, based on change in encoder rotation
 		d_distance = denc * self.ticks_per_meter
 		# Convert encoder angular displacement into velocity for compatibility with state-transition models
-		encoder_velocity = d_distance / float(dt)
+		encoder_velocity = d_distance / np.float(dt)
+
+		if encoder_velocity < 0.03:
+			self.prev_time = time
+			self.prev_ticks = fixed_inputs[1]
+			self.counter += 1
+			dt = 0
+			return self.prev_pose
 
 		# Update state-transition Jacobian
 		Fk, Hk = self.update_model(dt)
@@ -185,16 +194,17 @@ class TricycleModel(object):
 			# Modify state vector to reflect the current encoder readings
 			states = np.array(self.prev_states)
 			states[3] = encoder_velocity*np.cos(inputs[0])
-			states[4] = encoder_velocity*np.sin(inputs[0])/self.d_dist
+			states[4] = encoder_velocity*np.sin(inputs[0])/self.r_dist
 			states[5] = encoder_velocity
 			states[6] = inputs[0]
 			estimates = Fk.dot(states)
 			# print("		Using Dead-Reckoning Estimation: ")
 		else:
 			alpha = fixed_inputs[0]
-			gyro_enc = encoder_velocity * np.sin(alpha) / self.d_dist
+			gyro_enc = encoder_velocity * np.tan(alpha) / self.r_dist
 			gyro_imu = fixed_inputs[2]
-			inputs = np.array([ [alpha, encoder_velocity, gyro_enc, gyro_imu] ])
+			v = encoder_velocity*np.cos(alpha)
+			inputs = np.array([ [alpha, encoder_velocity, v, gyro_enc, gyro_imu] ])
 			estimates,_ = self.filter.update(dt, inputs, self)
 
 		# Extract pose-related variables
@@ -221,7 +231,16 @@ class TricycleModel(object):
 	def update_model(self, dt):
 		"""
 		:brief: Update the state-transition model
+			# States:
+			x(t) =   |  x(t-1)	| [0]
+					 |  y(t-1)	| [1]
+					 |  θ(t-1)	| [2]
+					 |  v(t-1)	| [3]
+					 |  ω(t-1)	| [4]
+				   	 |  vs(t-1)	| [5]
+					 |  α(t-1)	| [6]
 
+			# Time-continuous Process Model
 			f(x,t) = |   x(t-1) + v(t-1)dt*cos(θ(t-1))	|
 					 |   y(t-1) + v(t-1)dt*sin(θ(t-1))	|
 					 |   	  θ(t-1) + ω(t-1)dt			|
@@ -236,22 +255,37 @@ class TricycleModel(object):
 			The updated model's state-transition matrix Jacobian
 		"""
 
-		# Local storage of the model's previous states
-		x = self.prev_states
+		# Previous
+		x,y,theta,v,w,vs,a = self.prev_states
+		# X,Y,theta,v,w,vs,a = self.prev_states
+		# print x
+		# print str([X,Y,theta,v,w,vs,a])
+
+		# Intermediate values
+		F03 = -v*dt*np.sin(theta); 			F04 = dt*np.cos(theta)
+		F13 = v*dt*np.cos(theta);			F14 = dt*np.sin(theta)
+		F24 = (dt*np.tan(a))/self.r_dist; 	F27 = v*dt/(np.power(np.cos(a),2)*self.r_dist)
+		F36 = np.cos(a); 					F37 = -vs*np.sin(a)
+		F46 = np.sin(a)/self.r_dist;		F47 = vs*np.cos(a)/self.r_dist
 
 		# Time-continuous non-linear state transition Jacobian: F(x)
-		Fx = np.array([ [1, 0, -dt*np.sin(x[2]), dt*np.cos(x[2]), 0, 0, 0],
-						[0, 1, -dt*np.cos(x[2]), dt*np.sin(x[2]), 0, 0, 0],
-						[0, 0, 1, 0, dt, 0, 0],
-						[0, 0, 0, 0, 0, np.cos(x[6]), 0],
-						[0, 0, 0, 0, 0, np.sin(x[6])/self.d_dist, 0],
-						[0, 0, 0, 0, 0, 1, 0],
-						[0, 0, 0, 0, 0, 0, 1] ])
+		Fx = np.array([ [1, 0, F03, F04, 0,  0,    0],
+						[0, 1, F13, F14, 0,  0,    0],
+						[0, 0,   1, F24, 0,  0,  F27],
+						[0, 0,   0,   0, 0, F36, F37],
+						[0, 0,   0,   0, 0, F46, F47],
+						[0, 0,   0,   0, 0,   1,   0],
+						[0, 0,   0,   0, 0,   0,   1]
+					])
 
-		Hx = np.array([  [0, 0, 0, 0, 0, 0, 1],
-						 [0, 0, 0, 0, 0, 1, 0],
-						 [0, 0, 0, 0, 0, np.sin(x[6])/self.d_dist, 0],
-						 [0, 0, 0, 0, 1, 0, 0]
+		H20 = np.cos(a); 					H21 = -vs*np.sin(a)
+		H30 = (dt*np.tan(a))/self.r_dist; 	H31 = v*dt/(np.power(np.cos(a),2)*self.r_dist)
+
+		Hx = np.array([  [0, 0, 0,   0, 0,  0,    1],
+						 [0, 0, 0,   0, 0,  1,    0],
+						 [0, 0, 0,   0, 0, H20, H21],
+						 [0, 0, 0, H30, 0,  0,  H31],
+						 [0, 0, 0,   0, 1,  0,    0]
 			 ])
 
 		self.F = Fx

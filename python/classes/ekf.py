@@ -50,16 +50,20 @@ class EKF(object):
 			print("ERROR: The Process Model Jacobian Matrix [H] must be of size [M x N]")
 
 	def setQ(self, q):
-		if q.shape == self.Q.shape:
-			self.Q = q
+		# print("Q Matrix (before setting):\r\n" + str(self.Q))
+		if q.shape[1] == self.Q.shape[0]:
+			self.Q = np.multiply(np.identity(self.N), q.T)
 		else:
 			print("ERROR: The Process Noise Covariance Matrix [Q] must be of size [N x N]")
+		# print("Q Matrix (after setting):\r\n" + str(self.Q))
 
 	def setR(self, r):
-		if r.shape == self.R.shape:
-			self.R = r
+		# print("R Matrix (before setting):\r\n" + str(self.R))
+		if r.shape[1] == self.R.shape[0]:
+			self.R = np.multiply(np.identity(self.M), r.T)
 		else:
 			print("ERROR: The Measurement Error Covariance Matrix [R] must be of size [M x M]")
+		# print("R Matrix (after setting):\r\n" + str(self.R))
 
 	def update(self, dt, inputs, model=None, debug=True):
 		# Modify variable naming scheme for easier user reading and typing
@@ -86,20 +90,13 @@ class EKF(object):
 		else: # Figure out a more generalizable method for EKF <-> model inter-operability
 			F = np.array(model.F)
 			H = np.array(model.H)
+			# old_x = model.prev_states
 			# print("Model [" + str(model.name) + "] Specified.")
 
 		# Generate some random noise
-		# state_noise = np.random.normal(np.zeros_like(old_x),scale=0.0001)
-		# obs_noise = np.random.normal(np.zeros_like(self.Z),scale=0.01)
-		state_noise = np.random.normal(np.array([[0.000001],[0.0001],[0.001],[0.0001],[0.0001],[0.0001],[0.00001]]),scale=0.1)
-		# obs_noise = np.random.normal(np.array([[1.0],[1.0],[1.0],[1.0]]),scale=1.0)
-		obs_noise = np.random.normal(np.array([[0.0],[0.0],[0.0],[0.0]]),scale=0.10)
-		# obs_noise = np.random.normal(np.zeros_like(self.Z),scale=0.50)
-
+		# state_noise = np.random.normal(np.zeros_like(old_x),scale=0.0025)
+		state_noise = np.random.normal(np.array([[0.00001],[0.00001],[0.00000001],[0.01],[0.01],[0.01],[0.00001]]),scale=0.002)
 		# state_noise = np.random.normal(np.zeros_like(old_x),scale=0)
-		# obs_noise = np.random.normal(np.zeros_like(self.Z),scale=0)
-		# obs_noise = np.zeros_like(self.Z)
-
 
 		"""
 		Prediction Stage
@@ -118,7 +115,7 @@ class EKF(object):
 			xhat = xhat + K * residual;
 			Phat = (In - K * H) * Phat;
 		"""
-		measurement_residual = zk - (H.dot(pred_x) + obs_noise)
+		measurement_residual = zk - (H.dot(pred_x))
 		residual_covariance = H.dot(pred_p).dot(H.T) + R
 		kalman_gain = pred_p.dot(H.T).dot(np.linalg.inv(residual_covariance))
 

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 import numpy as np
 
-# file = '/home/hunter/theHuntingGround/src/tricycle_pose_estimator/data/processed/trike_straight_generated_outputs.csv'
+file = '/home/hunter/theHuntingGround/src/tricycle_pose_estimator/data/processed/trike_straight_generated_outputs.csv'
 file = '/home/hunter/theHuntingGround/src/tricycle_pose_estimator/data/processed/trike_circle_generated_outputs.csv'
 
 outputs = np.genfromtxt(file, delimiter=',')

@@ -6,22 +6,23 @@ import matplotlib.pyplot as plt
 from classes import *
 from utils import utils as ut
 
-if __name__ == "__main__" :
+flag_sim_line = False
 
+if __name__ == "__main__" :
 	print ("\n" * 10000)
 	print("=============================================")
 	np.set_printoptions(suppress=True)
 	np.set_printoptions(precision=4)
 	# Setup commandline argument(s) structures
 	ap = argparse.ArgumentParser(description='Image Segmentation')
-
-	# ap.add_argument("--inputs", "-i", type=str, default='../data/processed/trike_straight_extracted_inputs.csv', metavar='FILE', help="Name of video file to parse")
-	# ap.add_argument("--truth", "-t", type=str, default='../data/processed/trike_straight_extracted_truth.csv', metavar='FILE', help="Name of video file to parse")
-	# ap.add_argument("--output", "-o", type=str, default='../data/processed/trike_straight_generated_outputs.csv', metavar='FILE', help="Name of video file to parse")
-
-	ap.add_argument("--inputs", "-i", type=str, default='../data/processed/trike_circle_extracted_inputs.csv', metavar='FILE', help="Name of video file to parse")
-	ap.add_argument("--truth", "-t", type=str, default='../data/processed/trike_circle_extracted_truth.csv', metavar='FILE', help="Name of video file to parse")
-	ap.add_argument("--output", "-o", type=str, default='../data/processed/trike_circle_generated_outputs.csv', metavar='FILE', help="Name of video file to parse")
+	if flag_sim_line == True:
+		ap.add_argument("--inputs", "-i", type=str, default='../data/processed/trike_straight_extracted_inputs.csv', metavar='FILE', help="Name of video file to parse")
+		ap.add_argument("--truth", "-t", type=str, default='../data/processed/trike_straight_extracted_truth.csv', metavar='FILE', help="Name of video file to parse")
+		ap.add_argument("--output", "-o", type=str, default='../data/processed/trike_straight_generated_outputs.csv', metavar='FILE', help="Name of video file to parse")
+	else:
+		ap.add_argument("--inputs", "-i", type=str, default='../data/processed/trike_circle_extracted_inputs.csv', metavar='FILE', help="Name of video file to parse")
+		ap.add_argument("--truth", "-t", type=str, default='../data/processed/trike_circle_extracted_truth.csv', metavar='FILE', help="Name of video file to parse")
+		ap.add_argument("--output", "-o", type=str, default='../data/processed/trike_circle_generated_outputs.csv', metavar='FILE', help="Name of video file to parse")
 
 	# Store parsed arguments into array of variables
 	args = vars(ap.parse_args())
@@ -34,13 +35,13 @@ if __name__ == "__main__" :
 
 	# Initialize useful class objects
 	model = TricycleModel()
-	filter = EKF(7,4)
+	filter = EKF(7,5)
 
 	# Tune EKF Parameters before attaching EKF to model
-	testR = np.array([[1.0, 0.7, 1.0, 0.9],]).T
-	testQ = np.array([[0.5, 0.5, 0.01, 1.0, 0.01, 1.0, 1.0],]).T
-	filter.setR(np.diagonal(testR))
-	filter.setQ(np.diagonal(testQ))
+	testQ = np.array([[0.05, 0.05, 0.01, 1.0, 0.01, 1.0, 1.0],])
+	testR = np.array([[0.05, 0.001, 0.01, 0.5, 0.5],])
+	filter.setR(testR)
+	filter.setQ(testQ)
 	# Attach EKF to Mobile-Base
 	model.attachEstimationMethod(filter) # Link the model with the estimation method
 
@@ -54,9 +55,14 @@ if __name__ == "__main__" :
 	nEntries,nInputs = inputs.shape
 	print("")
 
+	if flag_sim_line == True:
+		rng = range(0,nEntries)
+	else:
+		rng = range(115,300)
+
+	rng = range(0,nEntries)
 	# Go through each data entry and calculate our estimated pose
-	# for i in range(0,nEntries):
-	for i in range(115,300):
+	for i in rng:
 		# Grab current data entries
 		time = inputs[i,0];
 		steering_angle = inputs[i-1,1]
